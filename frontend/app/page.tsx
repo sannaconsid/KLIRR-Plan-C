@@ -1,7 +1,7 @@
 "use client";
 
-import { useReducer, useState, useEffect, FormEvent } from "react";
-import { connection } from "./connection";
+import { useReducer, useState, useEffect, FormEvent, useRef } from "react";
+import { createConnection } from "./connection";
 
 type MessageType = "observation" | "beslut" | "uppdatering" | "system";
 
@@ -78,10 +78,42 @@ function parseCommand(input: string): { type: MessageType; text: string } | null
 export default function EmergencyChat() {
   const [state, dispatch] = useReducer(reducer, initialState);
   const [input, setInput] = useState("");
-
+  const connectionRef = useRef<any>(null);
+  
   const visibleMessages = state.messages.filter(
     (m) => m.channel === state.activeChannel
   );
+  // Effect to manage the SignalR connection
+  useEffect(() => {
+    if (!state.activeChannel) {
+      return;
+    }
+
+    const initConnection = async () => {
+      try {
+        const conn = await createConnection();
+        connectionRef.current = conn;
+        if (connectionRef.current.state === "Disconnected") {
+          await conn.start();
+          console.log("SignalR connected");
+        }
+
+        conn.on("ReceiveMessage", (message) => {
+          dispatch({ type: "ADD_MESSAGE", message: message });
+        });
+      } catch (e) {
+        console.error("SignalR Connection failed: ", e);
+      }
+    };
+
+    initConnection();
+
+    return () => {
+      if (connectionRef.current) {
+        connectionRef.current.off("ReceiveMessage");
+      }
+    };
+  }, [state.activeChannel]);
 
   useEffect(() => {
     const fetchChannels = async () => {
@@ -100,39 +132,12 @@ export default function EmergencyChat() {
     fetchChannels();
   }, []);
 
-  // Effect to manage the SignalR connection
-  useEffect(() => {
-    if (!state.activeChannel) {
-      return;
-    }
 
-    const startConnection = async () => {
-      try {
-        if (connection.state === "Disconnected") {
-          await connection.start();
-          console.log("SignalR connected");
-        }
-
-        connection.on("ReceiveMessage", (message) => {
-          dispatch({ type: "ADD_MESSAGE", message: message });
-        });
-      } catch (e) {
-        console.error("SignalR Connection failed: ", e);
-      }
-    };
-
-    startConnection();
-
-    return () => {
-      connection.off("ReceiveMessage");
-    };
-  }, [state.activeChannel]);
-
-  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+  function handleSubmit(e: SubmitEvent) {
     e.preventDefault();
     const command = parseCommand(input);
     if (command) {
-      connection.invoke("SendMessage", command.type, command.text, state.activeChannel);
+      connectionRef.current?.invoke("SendMessage", command.type, command.text, state.activeChannel);
     }
     setInput("");
   }
@@ -146,7 +151,7 @@ export default function EmergencyChat() {
             key={ch}
             onClick={() => {
               if (ch !== state.activeChannel) {
-                connection.invoke("SwitchChannel", state.activeChannel, ch);
+                connectionRef.current?.invoke("SwitchChannel", state.activeChannel, ch);
                 dispatch({ type: "SET_CHANNEL", channel: ch });
               }
             }}
