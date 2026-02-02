@@ -1,10 +1,9 @@
 "use client";
 
-import { useReducer, useState, useEffect } from "react";
+import { useReducer, useState, useEffect, FormEvent } from "react";
 import { connection } from "./connection";
 
 type MessageType = "observation" | "beslut" | "uppdatering" | "system";
-
 
 interface ChatMessage {
   id: string;
@@ -21,21 +20,36 @@ interface State {
 }
 
 type Action =
+  | { type: "SET_CHANNELS"; channels: string[] }
   | { type: "SET_CHANNEL"; channel: string }
   | { type: "ADD_MESSAGE"; message: ChatMessage;};
-
-
-  const initialState: State = {
-  channels: ["#Flödet", "Ledning", "Fält", "Samordning", "#4242"],
-  activeChannel: "#Flödet",
+  
+  
+const initialState: State = {
+  channels: [],
+  activeChannel: "",
   messages: [
   ],
 };
-
+  
+const colorMap: Record<MessageType, string> = {
+  observation: "text-blue-400",
+  beslut: "text-green-400",
+  uppdatering: "text-orange-400",
+  system: "text-gray-400",
+};
+  
 function reducer(state: State, action: Action): State {
   switch (action.type) {
     case "SET_CHANNEL":
+      if (action.channel === state.activeChannel) return state;
       return { ...state, activeChannel: action.channel };
+    case "SET_CHANNELS":
+      return {
+        ...state,
+        channels: action.channels,
+        activeChannel: state.activeChannel || action.channels[0] || "",
+      };
     case "ADD_MESSAGE":
       return { ...state, messages: [...state.messages, action.message] };
     default:
@@ -43,74 +57,83 @@ function reducer(state: State, action: Action): State {
   }
 }
 
-
-const colorMap: Record<MessageType, string> = {
-  observation: "text-blue-400",
-  beslut: "text-green-400",
-  uppdatering: "text-orange-400",
-  system: "text-gray-400",
-};
-
-function parseCommand(input: string, channel: string): ChatMessage | null {
-  
+function parseCommand(input: string): { type: MessageType; text: string } | null {
   if (!input.startsWith("@")) return null;
-  
+
   const [cmd, ...rest] = input.slice(1).split(" ");
   const text = rest.join(" ");
-  
+
   const typeMap: Record<string, MessageType> = {
     obs: "observation",
     bes: "beslut",
-    issue: "uppdatering",
+    upp: "uppdatering",
   };
-  
+
   const type = typeMap[cmd];
   if (!type) return null;
-  connection.invoke("SendMessage", type, input, channel)
-  
-  return {
-    id: crypto.randomUUID(),
-    timestamp: Date.now(),
-    type,
-    channel,
-    text,
-  };
+
+  return { type, text };
 }
 
 export default function EmergencyChat() {
   const [state, dispatch] = useReducer(reducer, initialState);
   const [input, setInput] = useState("");
 
-  if (!state.activeChannel) {
-    return;
-  }
-
   const visibleMessages = state.messages.filter(
     (m) => m.channel === state.activeChannel
   );
 
   useEffect(() => {
-    connection.start()
-      .then(() => console.log("SignalR connected"))
-      .catch(console.error);
+    const fetchChannels = async () => {
+      try {
+        const res = await fetch("https://localhost:7298/api/channels");
+        if (!res.ok) {
+          throw new Error(`Failed to fetch channels: ${res.status} ${res.statusText}`);
+        }
+        const channels = await res.json();
+        dispatch({ type: "SET_CHANNELS", channels });
+      } catch (e) {
+        console.error("Failed to fetch channels: ", e);
+      }
+    };
 
-    connection.on("ReceiveMessage", (message) => {
-      dispatch({ type: "ADD_MESSAGE", message: message});
-    });
+    fetchChannels();
+  }, []);
+
+  // Effect to manage the SignalR connection
+  useEffect(() => {
+    if (!state.activeChannel) {
+      return;
+    }
+
+    const startConnection = async () => {
+      try {
+        if (connection.state === "Disconnected") {
+          await connection.start();
+          console.log("SignalR connected");
+        }
+
+        connection.on("ReceiveMessage", (message) => {
+          dispatch({ type: "ADD_MESSAGE", message: message });
+        });
+      } catch (e) {
+        console.error("SignalR Connection failed: ", e);
+      }
+    };
+
+    startConnection();
 
     return () => {
       connection.off("ReceiveMessage");
     };
-  }, []);
-  
-  function handleSubmit(e: React.ChangeEvent<HTMLInputElement>) {
+  }, [state.activeChannel]);
 
+  function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const msg = parseCommand(input, state.activeChannel);
-    if (msg) {
-      dispatch({ type: "ADD_MESSAGE", message: msg});
+    const command = parseCommand(input);
+    if (command) {
+      connection.invoke("SendMessage", command.type, command.text, state.activeChannel);
     }
-
     setInput("");
   }
 
@@ -121,7 +144,12 @@ export default function EmergencyChat() {
         {state.channels.map((ch) => (
           <div
             key={ch}
-            onClick={() => dispatch({ type: "SET_CHANNEL", channel: ch })}
+            onClick={() => {
+              if (ch !== state.activeChannel) {
+                connection.invoke("SwitchChannel", state.activeChannel, ch);
+                dispatch({ type: "SET_CHANNEL", channel: ch });
+              }
+            }}
             className={`cursor-pointer px-2 py-1 rounded mb-1 ${
               state.activeChannel === ch
                 ? "bg-zinc-700"
@@ -155,7 +183,7 @@ export default function EmergencyChat() {
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="@obs …  @beslut …  /issue …"
+            placeholder="@obs …  @bes … "
             className="w-full bg-zinc-800 text-zinc-100 px-3 py-2 outline-none"
           />
         </form>

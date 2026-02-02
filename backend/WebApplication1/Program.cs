@@ -30,9 +30,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseCors("CorsPolicy");
 app.UseAuthorization();
 app.MapControllers();
-app.UseCors("CorsPolicy");
 app.MapHub<ChatHub>("/chatHub");
 
 app.Run();
