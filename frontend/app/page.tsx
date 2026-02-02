@@ -1,7 +1,7 @@
 "use client";
 
-import { useReducer, useState, useEffect } from "react";
-import { connection } from "./connection";
+import { useReducer, useState, useEffect, useRef } from "react";
+import { createConnection } from "./connection";
 
 type MessageType = "observation" | "beslut" | "uppdatering" | "system";
 
@@ -66,7 +66,6 @@ function parseCommand(input: string, channel: string): ChatMessage | null {
   
   const type = typeMap[cmd];
   if (!type) return null;
-  connection.invoke("SendMessage", type, input, channel)
   
   return {
     id: crypto.randomUUID(),
@@ -80,6 +79,7 @@ function parseCommand(input: string, channel: string): ChatMessage | null {
 export default function EmergencyChat() {
   const [state, dispatch] = useReducer(reducer, initialState);
   const [input, setInput] = useState("");
+  const connectionRef = useRef<any>(null);
 
   if (!state.activeChannel) {
     return;
@@ -90,16 +90,24 @@ export default function EmergencyChat() {
   );
 
   useEffect(() => {
-    connection.start()
-      .then(() => console.log("SignalR connected"))
-      .catch(console.error);
+    const initConnection = async () => {
+      const conn = await createConnection();
+      connectionRef.current = conn;
+      await conn.start()
+        .then(() => console.log("SignalR connected"))
+        .catch(console.error);
 
-    connection.on("ReceiveMessage", (message) => {
-      dispatch({ type: "ADD_MESSAGE", message: message});
-    });
+      conn.on("ReceiveMessage", (message) => {
+        dispatch({ type: "ADD_MESSAGE", message: message});
+      });
+    };
+
+    initConnection();
 
     return () => {
-      connection.off("ReceiveMessage");
+      if (connectionRef.current) {
+        connectionRef.current.off("ReceiveMessage");
+      }
     };
   }, []);
   
@@ -108,7 +116,7 @@ export default function EmergencyChat() {
     e.preventDefault();
     const msg = parseCommand(input, state.activeChannel);
     if (msg) {
-      dispatch({ type: "ADD_MESSAGE", message: msg});
+      connectionRef.current?.invoke("SendMessage", msg.type, msg.text, msg.channel)
     }
 
     setInput("");
