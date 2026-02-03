@@ -25,4 +25,6 @@ public class Info
 
     [Required]
     public string InfoText { get; set; } = string.Empty;
+    public Issue Issue { get; set; } = null!;
+    public int IssueId { get; set; }
 }
