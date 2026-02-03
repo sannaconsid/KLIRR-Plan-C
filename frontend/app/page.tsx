@@ -140,26 +140,19 @@ export default function EmergencyChat() {
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        // Fetch all initial data in parallel
         const [channelsRes, issuesRes] = await Promise.all([
           fetch(`${adress}channels`),
-          fetch(`${adress}issue`), // Assumes GET /api/issue returns Issue[]
-          // fetch(`${adress}messages`) // Assumes GET /api/messages returns ChatMessage[]
+          fetch(`${adress}issue`),
         ]);
 
         if (!channelsRes.ok) throw new Error(`Failed to fetch channels: ${channelsRes.statusText}`);
         if (!issuesRes.ok) throw new Error(`Failed to fetch issues: ${issuesRes.statusText}`);
-        // if (!messagesRes.ok) throw new Error(`Failed to fetch messages: ${messagesRes.statusText}`);
 
         const channels = await channelsRes.json();
         const issues: Issue[] = await issuesRes.json();
-        // const messages: ChatMessage[] = await messagesRes.json();
 
         dispatch({ type: "SET_CHANNELS", channels });
         dispatch({ type: "SET_ISSUES", issues });
-        // messages.forEach((message) => {
-          // dispatch({ type: "ADD_MESSAGE", message });
-        // });
 
       } catch (e) {
         console.error("Failed to fetch initial data: ", e);
@@ -178,7 +171,7 @@ export default function EmergencyChat() {
     const command = parseCommand(input);
     if (command) {
       connectionRef.current?.invoke(
-        "SendMessage",
+        "UpdateStatus",
         command.type,
         command.text,
         state.activeChannel,
@@ -221,6 +214,8 @@ export default function EmergencyChat() {
         {/* Channel header */}
         <div className="border-b border-zinc-700 px-4 py-2 font-bold">
           {state.activeChannel}
+
+          {/* New Issue Button */}
           <button
             onClick={async (e: MouseEvent<HTMLButtonElement>) => {
               e.stopPropagation();
@@ -246,7 +241,7 @@ export default function EmergencyChat() {
                 alert("Failed to create issue.");
               }
             }} className="text-xs bg-zinc-700 hover:bg-zinc-600 px-1 rounded"
-          >
+            >
             + Nytt Ärende
           </button>
         </div>
@@ -287,6 +282,7 @@ export default function EmergencyChat() {
           onSubmit={handleSubmit}
           className="border-t border-zinc-700 p-2"
         >
+          {/* Command buttons */}
           <div className="flex gap-2 mb-2">
             {[
               { label: "OBSERVATION", prefix: "@obs " },
@@ -300,8 +296,7 @@ export default function EmergencyChat() {
                   setInput(btn.prefix + input.replace(/^@(obs|bes|upp)\s*/, ""));
                   inputRef.current?.focus();
                 }}
-                className="text-[10px] border border-zinc-600 px-2 py-0.5 rounded hover:bg-zinc-700 transition-colors"
-              >
+                className="text-[10px] border border-zinc-600 px-2 py-0.5 rounded hover:bg-zinc-700 transition-colors">
                 {btn.label}
               </button>
             ))}
