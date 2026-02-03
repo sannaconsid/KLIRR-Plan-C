@@ -5,10 +5,10 @@ namespace Business.Data;
 
 public class Issue
 {
-    public const string NewIssueState = "New";
-    public const string DefaultIssueOngoing = "Ongoing";
-    public const string DefaultIssueParked = "Parked";
-    public const string DefaultIssueClosed = "Closed";
+    public const string StatusIwssueNew = "New";
+    public const string StatusIssueOngoing = "Ongoing";
+    public const string StatusIssueParked = "Parked";
+    public const string StatusIssueClosed = "Closed";
 
     [Key]
     public int Id { get; set; }

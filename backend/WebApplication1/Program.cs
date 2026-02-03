@@ -10,6 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 
 builder.Services.AddTransient<IssueService>();
+builder.Services.AddTransient<InfoService>();
 
 // Configure Entity Framework with SQLite
 builder.Services.AddDbContext<EmberDbContext>(options =>

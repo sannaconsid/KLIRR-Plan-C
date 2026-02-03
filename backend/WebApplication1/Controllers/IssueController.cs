@@ -1,8 +1,5 @@
-﻿using Business.Data;
-using Business.Services;
+﻿using Business.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
-using Microsoft.EntityFrameworkCore;
 
 namespace EmberWebApi.Controllers
 {
@@ -18,9 +15,16 @@ namespace EmberWebApi.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateIssue([FromBody] SaveIssueDto issue, CancellationToken cancellationToken)
+        public async Task<IActionResult> AddIssue([FromBody] AddIssueDto issue, CancellationToken cancellationToken)
         {
             await issueService.AddIssue(issue, cancellationToken);
+            return new OkResult();
+        }
+
+        [HttpPost("/{id}")]
+        public async Task<IActionResult> UpdateStatus([FromRoute] int id, [FromBody] UpdateStatusDto issue, CancellationToken cancellationToken)
+        {
+            await issueService.UpdateStatus(id, issue, cancellationToken);
             return new OkResult();
         }
     }
