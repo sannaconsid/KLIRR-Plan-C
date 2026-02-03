@@ -11,8 +11,8 @@ builder.Services.AddControllers();
 // Configure Entity Framework with SQLite
 builder.Services.AddDbContext<EmberDbContext>(options =>
 {
-    //var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=ember.db";
-    var connectionString = "Data Source=ember.db";
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=ember.db";
+    //var connectionString = "Data Source=ember.db";
     options.UseSqlite(connectionString);
 });
 
@@ -38,6 +38,14 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<EmberDbContext>();
+    db.Database.EnsureCreated();
+}
+
+app.Run();
 
 app.UseHttpsRedirection();
 app.UseCors("CorsPolicy");
