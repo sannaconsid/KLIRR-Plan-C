@@ -30,7 +30,7 @@ artifacts/
 .vs/
 
 # Database
- backend/WebApplication1/database/ember*
+backend/WebApplication1/database/ember*
 
 # ASP.NET Scaffolding
 ScaffoldingReadMe.txt
