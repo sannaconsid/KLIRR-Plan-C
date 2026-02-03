@@ -4,6 +4,7 @@ import { useReducer, useState, useEffect, FormEvent, useRef } from "react";
 import { createConnection } from "./connection";
 
 type MessageType = "observation" | "beslut" | "uppdatering" | "system";
+const adress = "https://localhost:7298/api/";
 
 interface ChatMessage {
   id: string;
@@ -119,7 +120,7 @@ export default function EmergencyChat() {
   useEffect(() => {
     const fetchChannels = async () => {
       try {
-        const res = await fetch("https://localhost:7298/api/channels"); //TODO: Move to config
+        const res = await fetch(`${adress}channels`); //TODO: Move to config
         if (!res.ok) {
           throw new Error(`Failed to fetch channels: ${res.status} ${res.statusText}`);
         }
@@ -178,7 +179,7 @@ export default function EmergencyChat() {
               const name = prompt("Ärende-namn:");
               if (name) {
                 try {
-                  await fetch(`https://localhost:7298/api/issues?name=${encodeURIComponent(name)}`, { method: 'POST' });
+                  await fetch(`${adress}issues?name=${encodeURIComponent(name)}`, { method: 'POST' });
                 } catch (e) {
                   console.error("Failed to create channel", e);
                 }
