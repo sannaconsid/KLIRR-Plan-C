@@ -20,7 +20,7 @@ The application follows a layered architecture separating concerns for maintaina
 
 - **Frontend**: Built with Next.js, a React-based framework for server-side rendering and static site generation. Handles user interactions, UI rendering, and client-side logic. Located in the `frontend/` directory.
 - **Backend**: Comprises an ASP.NET Core Web API (`EmberWebApi`) for RESTful API endpoints, and a `Business` class library for encapsulating domain logic and services. The backend is targeted for .NET 10.0 and includes configuration for multiple runtime environments. Located in the `backend/` directory.
-***Possible further development***
+- ***Possible further development***
 - There is a possibility to add another API for after-the-crisis data access. In that you could integrate with other systems or send a common format (such as .csv for Excel). Then all the desitions will be easier to follow up on with the regular environments.
 - The data is (with this setup) stored in the same location as the system is. There is a possibility to store it in any other location depending on the needs. If it is stored in a cloud-synced folder it will be secured once the internet is back on track for example. It can of-course also be copied exery x hours to any or several backup drives if needed.
 
