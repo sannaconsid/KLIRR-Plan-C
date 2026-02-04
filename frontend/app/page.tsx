@@ -2,6 +2,7 @@
 
 import { useReducer, useState, useEffect, FormEvent, useRef, MouseEvent } from "react";
 import { createConnection } from "./connection";
+import DetailedView from "./detailedView";
 
 type MessageType = "observation" | "beslut" | "uppdatering" | "system";
 const adress = "https://localhost:7298/api/";
@@ -30,6 +31,7 @@ interface State {
   messages: ChatMessage[];
   issues: Issue[];
   activeIssueId: string | null;
+  detailedIssue: Issue | null;
 }
 
 type Action =
@@ -47,6 +49,7 @@ const initialState: State = {
   messages: [],
   issues: [],
   activeIssueId: null,
+  detailedIssue: null,
 };
   
 const colorMap: Record<MessageType, string> = {
@@ -60,8 +63,8 @@ function reducer(state: State, action: Action): State {
   switch (action.type) {
     case "SET_CHANNEL":
       if (action.channel === state.activeChannel) return state; // No change
-      // When channel changes, clear the active issue
-      return { ...state, activeChannel: action.channel, activeIssueId: null };
+      // When channel changes, clear the active issue and detailed view
+      return { ...state, activeChannel: action.channel, activeIssueId: null, detailedIssue: null };
     case "SET_CHANNELS":
       return {
         ...state,
@@ -74,7 +77,7 @@ function reducer(state: State, action: Action): State {
       if (state.issues.some(i => i.id === action.issue.id)) return state;
       return { ...state, issues: [...state.issues, action.issue] };
     case "SET_ACTIVE_ISSUE":
-      return { ...state, activeIssueId: action.issueId };
+      return { ...state, activeIssueId: action.issueId, detailedIssue: action.details || null };
     case "ADD_MESSAGE":
       // Prevent duplicate messages if we fetch and get from SignalR
       if (state.messages.some(m => m.id === action.message.id)) return state;
@@ -135,7 +138,7 @@ export default function EmergencyChat() {
         connectionRef.current.off("ReceiveMessage");
       }
     };
-  }, []); // Run only once
+  }, []);
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -187,7 +190,7 @@ export default function EmergencyChat() {
   }
 
   return (
-    <div className="flex h-screen bg-zinc-900 text-zinc-100 font-mono">
+    <div className="flex h-screen bg-zinc-900 text-zinc-100 font-mono overflow-hidden">
       {/* The left side */}
       <aside className="w-56 border-r border-zinc-700 p-3">
         <div className="mb-3 flex justify-between items-center">
@@ -213,8 +216,8 @@ export default function EmergencyChat() {
         ))}
       </aside>
 
-      {/* The right side */}
-      <main className="flex flex-col flex-1">
+      {/* The middle column */}
+      <main className="flex flex-col flex-1 min-w-0">
 
         {/* Channel header */}
         <div className="border-b border-zinc-700 px-4 py-2 font-bold">
@@ -241,6 +244,7 @@ export default function EmergencyChat() {
                   const newIssue: Issue = JSON.parse(text);
                   dispatch({ type: "ADD_ISSUE", issue: newIssue });
                   dispatch({ type: "SET_ACTIVE_ISSUE", issueId: newIssue.id });
+                  window.location.reload();
                 }
               } else {
                 alert("Failed to create issue.");
@@ -263,6 +267,8 @@ export default function EmergencyChat() {
                     : "border-transparent hover:border-zinc-700"
                 }`}
                 // Fetch detailed info when clicking an issue
+                // Use the detailedView component to show details
+                
                 onClick={async () => {
                   const response = await fetch(`${adress}issue/${issue.id}`);
                   if (response.ok) {
@@ -271,7 +277,14 @@ export default function EmergencyChat() {
                   }
                 }}
               >
-                <h2 className="font-bold text-lg mb-2 text-zinc-300">{issue.title}</h2>
+                <div>
+                <h2 className="font-bold text-lg mb-2 text-zinc-300">
+                  {issue.title}
+                </h2>
+                <div style={{ float: "right", top: 10 }} className="text-sm text-zinc-500">
+                  {issue.state}
+                  </div>
+                </div>
                 <div className="space-y-1 pl-2 border-l-2 border-zinc-700">
                   {state.messages
                     .filter((m) => m.issueId === issue.id)
@@ -322,6 +335,9 @@ export default function EmergencyChat() {
           />
         </form>
       </main>
+
+      {/* Detailed View Pane */}
+      <DetailedView issue={state.detailedIssue} />
     </div>
   );
 }
