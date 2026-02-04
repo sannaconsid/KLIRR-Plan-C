@@ -36,7 +36,7 @@ type Action =
   | { type: "SET_CHANNELS"; channels: string[] }
   | { type: "SET_ISSUES"; issues: Issue[] }
   | { type: "ADD_ISSUE"; issue: Issue }
-  | { type: "SET_ACTIVE_ISSUE"; issueId: string | null }
+  | { type: "SET_ACTIVE_ISSUE"; issueId: string | null; details?: Issue }
   | { type: "SET_CHANNEL"; channel: string }
   | { type: "ADD_MESSAGE"; message: ChatMessage;};
   
@@ -140,14 +140,17 @@ export default function EmergencyChat() {
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const [channelsRes, issuesRes] = await Promise.all([
+        const [channelsRes, issuesRes, infoTypesRes] = await Promise.all([
           fetch(`${adress}channels`),
           fetch(`${adress}issue`),
+          fetch(`${adress}info/infotypes`),
         ]);
 
         if (!channelsRes.ok) throw new Error(`Failed to fetch channels: ${channelsRes.statusText}`);
         if (!issuesRes.ok) throw new Error(`Failed to fetch issues: ${issuesRes.statusText}`);
+        if (!infoTypesRes.ok) throw new Error(`Failed to fetch info types: ${infoTypesRes.statusText}`);
 
+        const infoTypes = await infoTypesRes.json();
         const channels = await channelsRes.json();
         const issues: Issue[] = await issuesRes.json();
 
@@ -162,22 +165,24 @@ export default function EmergencyChat() {
     fetchInitialData();
   }, []);
 
-  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!state.activeIssueId) {
       alert("Please select an issue card to send a message.");
       return;
     }
+
     const command = parseCommand(input);
-    if (command) {
-      connectionRef.current?.invoke(
-        "UpdateStatus",
-        command.type,
-        command.text,
-        state.activeChannel,
-        state.activeIssueId
-      );
-    }
+    const msg = command?.text;
+    const issueId = state.activeIssueId;
+    const response = await fetch(`${adress}info`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ text:msg, issueId:issueId,})
+    });
+
     setInput("");
   }
 
@@ -257,7 +262,14 @@ export default function EmergencyChat() {
                     ? "border-orange-400 bg-zinc-800"
                     : "border-transparent hover:border-zinc-700"
                 }`}
-                onClick={() => dispatch({ type: "SET_ACTIVE_ISSUE", issueId: issue.id })}
+                // Fetch detailed info when clicking an issue
+                onClick={async () => {
+                  const response = await fetch(`${adress}issue/${issue.id}`);
+                  if (response.ok) {
+                    const issueDetails = await response.json();
+                    dispatch({ type: "SET_ACTIVE_ISSUE", issueId: issue.id, details: issueDetails });
+                  }
+                }}
               >
                 <h2 className="font-bold text-lg mb-2 text-zinc-300">{issue.title}</h2>
                 <div className="space-y-1 pl-2 border-l-2 border-zinc-700">
