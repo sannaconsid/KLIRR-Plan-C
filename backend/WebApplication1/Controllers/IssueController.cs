@@ -14,7 +14,7 @@ namespace EmberWebApi.Controllers
             return new OkObjectResult(issues);
         }
 
-        [HttpGet("/{id}")]
+        [HttpGet("{id}")]
         public async Task<IActionResult> GetIssues([FromRoute] int id, CancellationToken cancellationToken)
         {
             var issues = await issueService.GetDetailedIssue(id, cancellationToken);
@@ -28,7 +28,7 @@ namespace EmberWebApi.Controllers
             return new OkResult();
         }
 
-        [HttpPost("/{id}")]
+        [HttpPost("{id}")]
         public async Task<IActionResult> UpdateStatus([FromRoute] int id, [FromBody] UpdateStatusDto issue, CancellationToken cancellationToken)
         {
             await issueService.UpdateStatus(id, issue, cancellationToken);
