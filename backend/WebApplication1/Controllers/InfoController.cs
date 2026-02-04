@@ -9,10 +9,17 @@ namespace EmberWebApi.Controllers
     {
 
         [HttpPost]
-        public async Task<IActionResult> AddIssue([FromBody] AddInfoDto info, CancellationToken cancellationToken)
+        public async Task<IActionResult> AddInfo([FromBody] AddInfoDto info, CancellationToken cancellationToken)
         {
             await infoService.AddInfo(info, cancellationToken);
             return new OkResult();
+        }
+
+        [HttpGet("infoTypes")]
+        public async Task<IActionResult> GetInfoTypes(CancellationToken cancellationToken)
+        {
+            var res = await infoService.GetInfoTypes(cancellationToken);
+            return new OkObjectResult(res);
         }
     }
 }

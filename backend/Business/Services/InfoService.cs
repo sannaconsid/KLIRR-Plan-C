@@ -9,6 +9,11 @@ namespace Business.Services
         public int IssueId { get; set; }
     }
 
+    public class InfoTypeDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+    }
 
     public class InfoService(EmberDbContext dbContext)
     {
@@ -24,6 +29,16 @@ namespace Business.Services
 
             dbContext.Infos.Add(info);
             await dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        public async Task<List<InfoTypeDto>> GetInfoTypes(CancellationToken cancellationToken)
+        {
+            var i = await dbContext.InfoTypes.ToListAsync(cancellationToken);
+            return [.. i.Select(a => new InfoTypeDto()
+            {
+                Id = a.Id,
+                Name = a.Name
+            })];
         }
     }
 }
