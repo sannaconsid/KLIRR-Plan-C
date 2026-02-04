@@ -9,6 +9,11 @@ It is intended to operate on a local network in a situation of crisis. The syste
 
 The data can later be exported to the non destructive PDF/A for archiving the events.
 
+I orginalform är tanken att det ska finnas 3 roller i systemet - en som bara har läsrättigheter - en som bara har delvisa skrivrättigheter - och en som 'admin' med kompletta skrivrättigheter.
+Detta kan hanteras via speciella USB-enheter som delas till de två skriv-berättiga rollerna. Detta gör att man även i kris inte behöver hålla reda på olika inloggningar till krissystemet, och att om AD/ordinarie inloggning inte fungerar så fungerar krissystemet.
+
+Dock ser vi ett behov av att se exakt vem som tagit vilket beslut, och inte bara vilken roll. Detta kan ses som en utökning av systemet där man i första hand försöker att nå Entra/AD för inloggning, med fallback till enklare autentiseringar/aktoriseringar.
+
 ## Architecture Overview
 
 The application follows a layered architecture separating concerns for maintainability and scalability:
