@@ -7,13 +7,20 @@ Plan-C is a full-stack web application developed as part of the KLIRR hackathon 
 
 It is intended to operate on a local network in a situation of crisis. The system will keep track of updates within different categories of issues. It will also help with an overview picture of what issues are currently active, which issues are completed, and when. Only management with a special USB device should be granted access to write new issues and interact with the system. The information will be open to view for anybody within the local network with a browser.
 
+The data can later be exported to the non destructive PDF/A for archiving the events.
+
+I orginalform är tanken att det ska finnas 3 roller i systemet - en som bara har läsrättigheter - en som bara har delvisa skrivrättigheter - och en som 'admin' med kompletta skrivrättigheter.
+Detta kan hanteras via speciella USB-enheter som delas till de två skriv-berättiga rollerna. Detta gör att man även i kris inte behöver hålla reda på olika inloggningar till krissystemet, och att om AD/ordinarie inloggning inte fungerar så fungerar krissystemet.
+
+Dock ser vi ett behov av att se exakt vem som tagit vilket beslut, och inte bara vilken roll. Detta kan ses som en utökning av systemet där man i första hand försöker att nå Entra/AD för inloggning, med fallback till enklare autentiseringar/aktoriseringar.
+
 ## Architecture Overview
 
 The application follows a layered architecture separating concerns for maintainability and scalability:
 
 - **Frontend**: Built with Next.js, a React-based framework for server-side rendering and static site generation. Handles user interactions, UI rendering, and client-side logic. Located in the `frontend/` directory.
 - **Backend**: Comprises an ASP.NET Core Web API (`EmberWebApi`) for RESTful API endpoints, and a `Business` class library for encapsulating domain logic and services. The backend is targeted for .NET 10.0 and includes configuration for multiple runtime environments. Located in the `backend/` directory.
-***Possible further development***
+ ### Possible further development
 - There is a possibility to add another API for after-the-crisis data access. In that you could integrate with other systems or send a common format (such as .csv for Excel). Then all the desitions will be easier to follow up on with the regular environments.
 - The data is (with this setup) stored in the same location as the system is. There is a possibility to store it in any other location depending on the needs. If it is stored in a cloud-synced folder it will be secured once the internet is back on track for example. It can of-course also be copied exery x hours to any or several backup drives if needed.
 
