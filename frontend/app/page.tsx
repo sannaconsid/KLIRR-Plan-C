@@ -1,11 +1,20 @@
 "use client";
 
-import { useReducer, useState, useEffect, FormEvent, useRef, MouseEvent } from "react";
+import { useReducer, useEffect, useRef, MouseEvent } from "react";
 import { createConnection } from "./connection";
 import DetailedView from "./detailedView";
 
 type MessageType = "observation" | "beslut" | "uppdatering" | "system";
-const adress = "https://localhost:7298/api/";
+
+const getAPiBaseUrl = () => {
+  if(typeof window !== "undefined"){
+    const hostname = window.location.hostname;
+    return `http://${hostname}/api/`;
+  }
+  return "http://localhost/api/";
+};
+
+const adress = getAPiBaseUrl();
 
 // A message now belongs to an issue
 interface ChatMessage {
@@ -40,7 +49,8 @@ type Action =
   | { type: "ADD_ISSUE"; issue: Issue }
   | { type: "SET_ACTIVE_ISSUE"; issueId: string | null; details?: Issue }
   | { type: "SET_CHANNEL"; channel: string }
-  | { type: "ADD_MESSAGE"; message: ChatMessage;};
+  | { type: "ADD_MESSAGE"; message: ChatMessage;}
+  | { type: "ADD_INFO"; payload: { issueId: string; text: string; timestamp: string } };
   
   
 const initialState: State = {
@@ -62,8 +72,7 @@ const colorMap: Record<MessageType, string> = {
 function reducer(state: State, action: Action): State {
   switch (action.type) {
     case "SET_CHANNEL":
-      if (action.channel === state.activeChannel) return state; // No change
-      // When channel changes, clear the active issue and detailed view
+      if (action.channel === state.activeChannel) return state; 
       return { ...state, activeChannel: action.channel, activeIssueId: null, detailedIssue: null };
     case "SET_CHANNELS":
       return {
@@ -79,37 +88,32 @@ function reducer(state: State, action: Action): State {
     case "SET_ACTIVE_ISSUE":
       return { ...state, activeIssueId: action.issueId, detailedIssue: action.details || null };
     case "ADD_MESSAGE":
-      // Prevent duplicate messages if we fetch and get from SignalR
       if (state.messages.some(m => m.id === action.message.id)) return state;
       return { ...state, messages: [...state.messages, action.message] };
+    case "ADD_INFO":
+      const newInfo = { 
+        description: action.payload.text, 
+        timestamp: action.payload.timestamp };
+      const updatedIssues = state.issues.map((i) => {
+        if (i.id === action.payload.issueId) {
+          return { ...i, info: [...i.info, newInfo] };
+        }
+        return i;
+      });
+      
+      let updatedDetailedIssue = state.detailedIssue;
+      if (state.detailedIssue && state.detailedIssue.id === action.payload.issueId) {
+         updatedDetailedIssue = { ...state.detailedIssue, info: [...state.detailedIssue.info, newInfo] };
+      }
+      return { ...state, issues: updatedIssues, detailedIssue: updatedDetailedIssue };
     default:
       return state;
   }
 }
 
-function parseCommand(input: string): { type: MessageType; text: string } | null {
-  if (!input.startsWith("@")) return null;
-
-  const [cmd, ...rest] = input.slice(1).split(" ");
-  const text = rest.join(" ");
-
-  const typeMap: Record<string, MessageType | undefined> = {
-    obs: "observation",
-    bes: "beslut",
-    upp: "uppdatering",
-  };
-
-  const type = typeMap[cmd];
-  if (!type) return null;
-
-  return { type, text };
-}
-
 export default function EmergencyChat() {
   const [state, dispatch] = useReducer(reducer, initialState);
-  const [input, setInput] = useState("");
   const connectionRef = useRef<any>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   // Effect to manage the SignalR connection
   useEffect(() => {
@@ -125,6 +129,9 @@ export default function EmergencyChat() {
 
         conn.on("ReceiveMessage", (message) => {
           dispatch({ type: "ADD_MESSAGE", message: message });
+        });
+        conn.on("ReceiveInfo", (info: any) => {
+          dispatch({ type: "ADD_INFO", payload: info });
         });
       } catch (e) {
         console.error("SignalR Connection failed: ", e);
@@ -167,27 +174,6 @@ export default function EmergencyChat() {
 
     fetchInitialData();
   }, []);
-
-  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (!state.activeIssueId) {
-      alert("Please select an issue card to send a message.");
-      return;
-    }
-
-    const command = parseCommand(input);
-    const msg = command?.text;
-    const issueId = state.activeIssueId;
-    const response = await fetch(`${adress}info`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ text:msg, issueId:issueId,})
-    });
-
-    setInput("");
-  }
 
   return (
     <div className="flex h-screen bg-zinc-900 text-zinc-100 font-mono overflow-hidden">
@@ -244,7 +230,6 @@ export default function EmergencyChat() {
                   const newIssue: Issue = JSON.parse(text);
                   dispatch({ type: "ADD_ISSUE", issue: newIssue });
                   dispatch({ type: "SET_ACTIVE_ISSUE", issueId: newIssue.id });
-                  window.location.reload();
                 }
               } else {
                 alert("Failed to create issue.");
@@ -285,59 +270,18 @@ export default function EmergencyChat() {
                   {issue.state}
                   </div>
                 </div>
-                <div className="space-y-1 pl-2 border-l-2 border-zinc-700">
-                  {state.messages
-                    .filter((m) => m.issueId === issue.id)
-                    .sort((a, b) => a.timestamp - b.timestamp)
-                    .map((m) => (
-                      <div key={m.id} className={colorMap[m.type]}>
-                        <span className="opacity-50 mr-2">
-                          @{m.type}:
-                        </span>
-                        {m.text}
-                      </div>
-                    ))}
-                </div>
               </div>
             ))}
         </div>
-          
-        {/* Input area */}
-        <form
-          onSubmit={handleSubmit}
-          className="border-t border-zinc-700 p-2"
-        >
-          {/* Command buttons */}
-          <div className="flex gap-2 mb-2">
-            {[
-              { label: "OBSERVATION", prefix: "@obs " },
-              { label: "BESLUT", prefix: "@bes " },
-              { label: "STATUS", prefix: "@upp " },
-            ].map((btn) => (
-              <button
-                key={btn.prefix}
-                type="button"
-                onClick={() => {
-                  setInput(btn.prefix + input.replace(/^@(obs|bes|upp)\s*/, ""));
-                  inputRef.current?.focus();
-                }}
-                className="text-[10px] border border-zinc-600 px-2 py-0.5 rounded hover:bg-zinc-700 transition-colors">
-                {btn.label}
-              </button>
-            ))}
-          </div>
-          <input
-            ref={inputRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="…"
-            className="w-full bg-zinc-800 text-zinc-100 px-3 py-2 outline-none"
-          />
-        </form>
       </main>
 
       {/* Detailed View Pane */}
-      <DetailedView issue={state.detailedIssue} />
+      <DetailedView 
+        issue={state.detailedIssue} 
+        activeChannel={state.activeChannel}
+        connection={connectionRef.current}
+        adress={adress}
+      />
     </div>
   );
 }

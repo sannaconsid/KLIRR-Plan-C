@@ -7,11 +7,11 @@ export const createConnection = async () => {
 
   const signalR = await import("@microsoft/signalr");
   connection = new signalR.HubConnectionBuilder()
-    .withUrl("https://localhost:7298/chatHub", {
+    .withUrl("http://192.168.26.108/chatHub", {
       withCredentials: true
     })
     .withAutomaticReconnect()
-    .configureLogging(signalR.LogLevel.Information)
+    .configureLogging(signalR.LogLevel.Debug)
     .build();
 
   return connection;
