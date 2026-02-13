@@ -9,11 +9,11 @@
     </mat-card-header>
       <mat-card-content>
         @for (event of iss.events; track $index) {
-          <p>{{ event.timestamp }} - {{ event.detail }}</p>
+          <p>{{ event.timestamp | date:'short' }} - {{ event.detail }}</p>
         }
     </mat-card-content>
 
   </mat-card>
 }   @else {
-  <p>No issue selected</p>
+  <p>Issue not found</p>
 }
