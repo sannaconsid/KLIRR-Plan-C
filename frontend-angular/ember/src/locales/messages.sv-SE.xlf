@@ -4,6 +4,7 @@
     <body>
       <trans-unit id="4820528532769775314" datatype="html">
         <source>Field</source>
+        <target>Fält</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/nav-bar/nav-bar.html</context>
           <context context-type="linenumber">5,6</context>
@@ -11,6 +12,7 @@
       </trans-unit>
       <trans-unit id="3604712109305413179" datatype="html">
         <source>Coordination</source>
+        <target>Samordning</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/nav-bar/nav-bar.html</context>
           <context context-type="linenumber">8,9</context>
@@ -18,6 +20,7 @@
       </trans-unit>
       <trans-unit id="7615147220727762615" datatype="html">
         <source>Management</source>
+        <target>Förvaltning</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/nav-bar/nav-bar.html</context>
           <context context-type="linenumber">11,12</context>
@@ -25,6 +28,7 @@
       </trans-unit>
       <trans-unit id="6667488504657444282" datatype="html">
         <source>Ember</source>
+        <target>Ember</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/nav-bar/nav-bar.ts</context>
           <context context-type="linenumber">15</context>

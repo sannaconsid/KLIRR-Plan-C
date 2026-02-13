@@ -1,5 +1,6 @@
-@import './theme-colors';
+@use './_theme-colors';
 
 :root {
   --blue: #00b; // or any global you wish to share with components 
+  --highlight: var(yellow); // example of using a theme color as a global
 }
