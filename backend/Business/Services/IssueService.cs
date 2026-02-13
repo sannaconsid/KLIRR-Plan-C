@@ -1,5 +1,7 @@
 ﻿using Business.Data;
 using Microsoft.EntityFrameworkCore;
+using Business.Services;
+using Microsoft.AspNetCore.SignalR;
 
 namespace Business.Services
 {
@@ -36,48 +38,42 @@ namespace Business.Services
         public string NewState { get; set; } = null!;
     }
 
-    public class IssueService(EmberDbContext dbContext)
+    public class IssueService(EmberDbContext dbContext, IHubContext<Hub> _hubContext)
     {
         public async Task<List<IssueDto>> GetAllIssuesAsync(CancellationToken cancellationToken)
         {
-            var issueDtos =  await dbContext.Issues.Select(issue => new IssueDto()
-            {
-                Id = issue.Id,
-                Title = issue.Name,
-                State = issue.State
-                
-            }).ToListAsync(cancellationToken);
+            var issues = await dbContext.Issues
+                .Select(i => new { i.Id, i.Name, i.State })
+                .ToListAsync(cancellationToken);
+
+            var issueIds = issues.Select(i => i.Id).ToList();
 
             var infos = await dbContext.Infos
-                .Where(info => issueDtos.Select(i => i.Id).Contains(info.IssueId))
-                .OrderByDescending(i => i.InfoTime)
-                .Select(info => new InfoDto()
+                .Where(info => issueIds.Contains(info.IssueId))
+                .OrderByDescending(info => info.InfoTime)
+                .Select(info => new
                 {
-                    
+                    info.IssueId,
                     Description = info.InfoText,
                     InfoType = info.Type.Name,
                     DateTime = info.InfoTime
                 })
-                .Take(3)
                 .ToListAsync(cancellationToken);
 
-            foreach (var issueDto in issueDtos)
-            {
-                issueDto.Info = await dbContext.Infos
-                    .Where(info => info.IssueId == issueDto.Id)
-                    .OrderByDescending(i => i.InfoTime)
-                    .Select(info => new InfoDto()
-                    {
+            var infosByIssue = infos
+                .GroupBy(x => x.IssueId)
+                .ToDictionary(g => g.Key, g => g.Take(3).Select(x => new InfoDto {
+                    Description = x.Description,
+                    InfoType = x.InfoType,
+                    DateTime = x.DateTime
+                }).ToList());
 
-                        Description = info.InfoText,
-                        InfoType = info.Type.Name,
-                        DateTime = info.InfoTime
-                    })
-                    .Take(3)
-                    .ToListAsync(cancellationToken);
-            }
-
-            return issueDtos;
+            return issues.Select(i => new IssueDto {
+                Id = i.Id,
+                Title = i.Name,
+                State = i.State,
+                Info = infosByIssue.TryGetValue(i.Id, out var list) ? list : new List<InfoDto>()
+            }).ToList();
         }
 
         public async Task<DetailedIssueDto?> GetDetailedIssue(int id, CancellationToken cancellationToken)
@@ -116,6 +112,7 @@ namespace Business.Services
 
             dbContext.Issues.Add(issue);
             await dbContext.SaveChangesAsync(cancellationToken);
+            await _hubContext.Clients.All.SendAsync("RecieveIssue", issue);
         }
 
         public async Task UpdateStatus(int id, UpdateStatusDto dto, CancellationToken cancellationToken)
