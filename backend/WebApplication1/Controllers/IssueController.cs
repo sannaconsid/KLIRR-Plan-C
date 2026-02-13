@@ -24,8 +24,14 @@ namespace EmberWebApi.Controllers
         [HttpPost]
         public async Task<IActionResult> AddIssue([FromBody] AddIssueDto issue, CancellationToken cancellationToken)
         {
-            await issueService.AddIssue(issue, cancellationToken);
-            return new OkResult();
+            var newIssue = await issueService.AddIssue(issue, cancellationToken);
+            return new OkObjectResult(new IssueDto
+            {
+                Id = newIssue.Id,
+                Title = newIssue.Name,
+                State = newIssue.State,
+                Info = []
+            });
         }
 
         [HttpPost("{id}")]

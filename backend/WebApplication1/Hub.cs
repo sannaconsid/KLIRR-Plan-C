@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using Business.Services;
+using Microsoft.AspNetCore.SignalR;
 using System;
 using System.Threading.Tasks;
 
 namespace WebApplication1
 {
-    public class ChatHub: Hub
+    public class ChatHub: Hub<IChatHub>
     {
         public override async Task OnConnectedAsync()
         {
@@ -19,6 +20,17 @@ namespace WebApplication1
                 await Groups.RemoveFromGroupAsync(Context.ConnectionId, oldChannel);
             }
             await Groups.AddToGroupAsync(Context.ConnectionId, newChannel);
+        }
+
+        public async Task SendInfo(int issueId, string text, string channel)
+        {
+            var ret_val = new
+            {
+                issueId = issueId,
+                text = text,
+                timestamp = DateTime.Now
+            };
+            await Clients.All.RecieveInfo(ret_val);
         }
 
         public async Task SendMessage(string type, string text, string channel)
@@ -41,7 +53,7 @@ namespace WebApplication1
                 text = text
             };
 
-            await Clients.Group(targetChannel).SendAsync("ReceiveMessage", ret_val);
+            await Clients.Group(targetChannel).RecieveInfo(ret_val);
         }
     }
 }
