@@ -95,7 +95,7 @@ namespace Business.Services
             return issueDto;
         }
 
-        public async Task AddIssue(AddIssueDto issueDto, CancellationToken cancellationToken)
+        public async Task<Issue> AddIssue(AddIssueDto issueDto, CancellationToken cancellationToken)
         {
             if (issueDto == null)
             {
@@ -113,6 +113,7 @@ namespace Business.Services
             dbContext.Issues.Add(issue);
             await dbContext.SaveChangesAsync(cancellationToken);
             await _hubContext.Clients.All.SendAsync("RecieveIssue", issue);
+            return issue;
         }
 
         public async Task UpdateStatus(int id, UpdateStatusDto dto, CancellationToken cancellationToken)
