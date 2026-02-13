@@ -3,5 +3,13 @@
   padding: 20px;
   border-radius: 0px;
 
-  //background-color: var(--highlight);
+}
+
+
+
+.title {
+  font-size: 1.5em;
+  font-weight: lighter;
+  margin-left: 30px;
+  color: var(--mat-sys-secondary);
 }
