@@ -2,32 +2,32 @@
 <xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
   <file source-language="en-US" datatype="plaintext" original="ng2.template">
     <body>
-      <trans-unit id="6667488504657444282" datatype="html">
-        <source>Ember</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">src/app/app.ts</context>
-          <context context-type="linenumber">14</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="4820528532769775314" datatype="html">
         <source>Field</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/nav-bar/nav-bar.html</context>
-          <context context-type="linenumber">4,5</context>
+          <context context-type="linenumber">5,6</context>
         </context-group>
       </trans-unit>
       <trans-unit id="3604712109305413179" datatype="html">
         <source>Coordination</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/nav-bar/nav-bar.html</context>
-          <context context-type="linenumber">7,8</context>
+          <context context-type="linenumber">8,9</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7615147220727762615" datatype="html">
         <source>Management</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/nav-bar/nav-bar.html</context>
-          <context context-type="linenumber">10,11</context>
+          <context context-type="linenumber">11,12</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6667488504657444282" datatype="html">
+        <source>Ember</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/nav-bar/nav-bar.ts</context>
+          <context context-type="linenumber">15</context>
         </context-group>
       </trans-unit>
     </body>

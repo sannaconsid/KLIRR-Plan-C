@@ -10,9 +10,10 @@
       "i18n": { 
         "sourceLocale":"en-US",
         "locales": {
-            "sv-SE": "src/locales/messages.sv-SE.xlf"
+            "sv": "src/locales/messages.sv-SE.xlf",
+            "en-UK": "src/locales/messages.en-UK.xlf"
         }
-      },
+      }, 
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -26,7 +27,7 @@
         "build": {
           "builder": "@angular/build:application",
           "options": {
-            "localize": ["sv-SE"],
+            "localize": ["sv"],
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
