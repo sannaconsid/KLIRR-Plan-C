@@ -1,11 +1,11 @@
-<mat-drawer-container class="container" autosize>
-  <!--<mat-drawer #drawer class="sidenav" mode="side" [opened]="true">
-    <h1 class="title">{{ title() }}</h1>
-  </mat-drawer>
--->
-  <app-nav-bar></app-nav-bar>
-  <div class="sidenav-content">
+
+<div class="container">
+
+  <app-nav-bar class="navigation"></app-nav-bar>
+
+  <div style="padding: 10px;">
     <router-outlet></router-outlet>
+
   </div>
 
-</mat-drawer-container>
+</div>

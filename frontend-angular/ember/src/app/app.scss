@@ -5,27 +5,14 @@
     width: 100vw;
 
     border-radius: 0px;
+    display: flex;
+    flex-direction: row;
 }
 
-.sidenav-content {
-  display: flex;
+.navigation {
   height: 100vh;
-  align-items: center;
-  justify-content: center;
-  background: var(--mat-sys-secondary-container);
+  width: 30%;
+  max-width: 300px;
 
-}
-
-.sidenav {
-  padding: 20px;
- // background: var(--mat-sys-primary-container, 80);
-  background: rgba(var(--mat-sys-primary-container), 1);
-
-  border-radius: 0px;
-
-}
-
-.title {
-  font: var(--mat-sys-headline-medium);
-  color: var(--mat-sys-on-secondary-60);
+  padding-right: 10px;
 }

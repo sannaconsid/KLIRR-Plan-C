@@ -1,0 +1,19 @@
+
+@let iss = issue();
+
+@if(iss) {
+  <mat-card appearance="outlined">
+    <mat-card-header>
+      <mat-card-title>{{ iss.title }}</mat-card-title>
+      <mat-card-subtitle>{{ iss.description }}</mat-card-subtitle>
+    </mat-card-header>
+      <mat-card-content>
+        @for (event of iss.events; track $index) {
+          <p>{{ event.timestamp }} - {{ event.detail }}</p>
+        }
+    </mat-card-content>
+
+  </mat-card>
+}   @else {
+  <p>No issue selected</p>
+}
