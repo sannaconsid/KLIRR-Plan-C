@@ -1,3 +1,3 @@
-@for (issue of issues; track $index) {
+@for (issue of issues$ | async; track $index) {
   <app-issue-overview [issue]="issue"></app-issue-overview>
 }

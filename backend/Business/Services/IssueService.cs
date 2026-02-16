@@ -39,7 +39,7 @@ namespace Business.Services
     }
 
     public class IssueService(EmberDbContext dbContext, IHubContext<Hub> _hubContext)
-    {
+    { 
         public async Task<List<IssueDto>> GetAllIssuesAsync(CancellationToken cancellationToken)
         {
             var issues = await dbContext.Issues

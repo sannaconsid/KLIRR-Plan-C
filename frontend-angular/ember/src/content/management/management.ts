@@ -1,25 +1,25 @@
-import { Component } from '@angular/core';
+import { Component, effect, inject } from '@angular/core';
 import { IssueOverview } from '../../shared-components/issue-overview/issue-overview';
 import { IssueOverviewData } from '../../shared-components/issue-overview/issue-overview.types';
+import { ManagementService } from './management.service';
+import { Observable } from 'rxjs';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
   selector: 'app-management',
-  imports: [ IssueOverview ],
+  imports: [ IssueOverview, AsyncPipe ],
   templateUrl: './management.html',
   styleUrl: './management.scss',
 })
 export class ManagementComponent {
-  issues: IssueOverviewData[] = [];
+  public issues$!: Observable<IssueOverviewData[]>;
 
-  ngOnInit() {
-    this.issues = [
-      { id: 1, title: 'Issue 1', description: 'Description of Issue 1', events: [ 
-        { timestamp: '2024-01-01T10:00:00Z', detail: 'Issue created' },
-        { timestamp: '2024-01-02T12:00:00Z', detail: 'Initial investigation completed' },
-        { timestamp: '2024-01-03T14:00:00Z', detail: 'Fix deployed' },
-      ] },
-      { id: 2, title: 'Issue 2', description: 'Description of Issue 2' },
-      { id: 3, title: 'Issue 3', description: 'Description of Issue 3' },
-    ]
+  private service = inject(ManagementService);
+
+  constructor() {
+    effect(() => {
+      this.issues$ = this.service.getIssues();
+    });
   }
+
 }

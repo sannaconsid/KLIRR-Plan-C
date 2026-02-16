@@ -35,6 +35,7 @@ builder.Services.AddCors(options =>
         policy
             .WithOrigins(
             "http://localhost:3000",
+            "http://localhost:4200",
             "http://192.168.26.108:3000",
             "http://ember:3000")
             .AllowAnyHeader()
