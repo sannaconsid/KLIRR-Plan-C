@@ -1,0 +1,23 @@
+.text {
+
+}
+
+  
+
+.header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+
+    .text {
+        font-size: 1.5em;
+        font-weight: lighter;
+        color: var(--mat-sys-secondary);
+    }
+
+    .add-issue {
+        float: right;
+        margin-right: 10px;
+        margin-bottom: 20px;
+    } 
+}

@@ -1,3 +1,9 @@
-@for (issue of issues$ | async; track $index) {
+
+<div class="header">
+    <h1 class="text" i18n>Management</h1>
+    <button matButton="filled" class="primary add-issue" (click)="addIssue()" i18n>Add Issue</button>
+</div>
+
+@for (issue of issues(); track $index) {
   <app-issue-overview [issue]="issue"></app-issue-overview>
 }

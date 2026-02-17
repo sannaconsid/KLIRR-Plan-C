@@ -1,6 +1,4 @@
-import { Component, inject, Injectable } from '@angular/core';
-import { IssueOverview } from '../../shared-components/issue-overview/issue-overview';
-import { IssueOverviewData } from '../../shared-components/issue-overview/issue-overview.types';
+import { inject, Injectable, signal } from '@angular/core';
 import { Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { API_BASE_URL } from '../../app/app.config';
@@ -10,9 +8,17 @@ export class ManagementService {
   private client = inject(HttpClient);
   private baseURL = inject(API_BASE_URL);
 
+  private issues = signal<any[] | undefined>(undefined);
 
-  getIssues(): Observable<any[]> {
+  saveIssue(name: string): Observable<any> {
+    return this.client.post<any>(this.baseURL + '/issue', { title: name });
+  }
 
-    return this.client.get<any[]>(this.baseURL + '/issue');
+  getIssuesSingal(){
+    this.client.get<any[]>(this.baseURL + '/issue').subscribe((data) => {
+      this.issues.set(data)
+    });
+
+    return this.issues;
   }
 }
